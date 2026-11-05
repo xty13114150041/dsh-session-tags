@@ -4,13 +4,14 @@ window.__ModuleLoader__.load({
     const React = require('react');
     const h = React.createElement;
     const NS = 'local.sessionTags';
+    const SESSION_DRAG_TYPE = 'application/x-dsh-session-tag';
     const dictionaries = {
-      zh: { tags: '标签', create: '新建标签', name: '标签名称', save: '保存', cancel: '取消', rename: '重命名标签', remove: '删除标签', removeConfirm: '删除标签后，会话回到原工作区；不会删除会话。', empty: '在会话的 ⋯ 菜单中选择「移至标签」', untitled: '未命名', newSession: '新会话', move: '移至标签', original: '移回原工作区', refresh: '刷新标签', loading: '正在加载标签…', retry: '重试', select: '选择标签', search: '筛选标签内的会话', noSession: '请先打开一个会话', menu: '会话操作', count: '{count} 个会话', close: '关闭', workspaces: '工作区', more: '显示更多', less: '收起列表' },
-      en: { tags: 'Tags', create: 'New tag', name: 'Tag name', save: 'Save', cancel: 'Cancel', rename: 'Rename tag', remove: 'Delete tag', removeConfirm: 'Sessions return to their original workspaces. No sessions will be deleted.', empty: 'Choose “Move to tag” from a session’s ⋯ menu', untitled: 'Untitled', newSession: 'New session', move: 'Move to tag', original: 'Return to workspace', refresh: 'Refresh tags', loading: 'Loading tags…', retry: 'Retry', select: 'Choose tag', search: 'Filter tagged sessions', noSession: 'Open a session first', menu: 'Session actions', count: '{count} sessions', close: 'Close', workspaces: 'Workspaces', more: 'Show more', less: 'Show less' },
+      zh: { tags: '标签', create: '新建标签', name: '标签名称', save: '保存', cancel: '取消', rename: '重命名标签', remove: '删除标签', removeConfirm: '删除标签后，会话回到原工作区；不会删除会话。', empty: '拖动会话到这里，或使用会话的 ⋯ 菜单', untitled: '未命名', newSession: '新会话', move: '移至标签', original: '移回原工作区', refresh: '刷新标签', loading: '正在加载标签…', retry: '重试', select: '选择标签', search: '筛选标签内的会话', noSession: '请先打开一个会话', menu: '会话操作', count: '{count} 个会话', close: '关闭', workspaces: '工作区', more: '显示更多', less: '收起列表' },
+      en: { tags: 'Tags', create: 'New tag', name: 'Tag name', save: 'Save', cancel: 'Cancel', rename: 'Rename tag', remove: 'Delete tag', removeConfirm: 'Sessions return to their original workspaces. No sessions will be deleted.', empty: 'Drop a session here, or use its ⋯ menu', untitled: 'Untitled', newSession: 'New session', move: 'Move to tag', original: 'Return to workspace', refresh: 'Refresh tags', loading: 'Loading tags…', retry: 'Retry', select: 'Choose tag', search: 'Filter tagged sessions', noSession: 'Open a session first', menu: 'Session actions', count: '{count} sessions', close: 'Close', workspaces: 'Workspaces', more: 'Show more', less: 'Show less' },
     };
     const css = `
-.st-root{display:flex;flex:1;flex-direction:column;min-height:0;overflow:hidden;color:var(--dsw-alias-label-primary)}
-.st-tags{flex:none;max-height:45%;overflow:auto;padding:2px 8px 8px 0;border-bottom:1px solid var(--dsw-alias-border-l1);margin-bottom:6px}
+.st-root{display:flex;flex:1;flex-direction:column;min-height:0;overflow-x:hidden;overflow-y:auto;scrollbar-gutter:stable;color:var(--dsw-alias-label-primary)}
+.st-tags{flex:none;padding:2px 8px 8px 0;border-bottom:1px solid var(--dsw-alias-border-l1);margin-bottom:6px}
 .st-heading,.st-group-head,.st-row{display:flex;align-items:center;gap:6px;min-width:0}
 .st-heading{height:32px;color:var(--dsw-alias-label-tertiary);font-size:12px;padding-left:4px}.st-heading>span{flex:1}
 .st-tags button,.st-dialog button{font:inherit;color:inherit;cursor:pointer;border:0;background:transparent;border-radius:6px}
@@ -18,6 +19,8 @@ window.__ModuleLoader__.load({
 .st-tags button:hover,.st-dialog button:hover{background:var(--dsw-alias-bg-layer-2)}
 .st-tags button:focus-visible,.st-dialog :focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:-2px}
 .st-group{border-radius:8px}.st-group.st-drop{background:var(--dsw-alias-bg-layer-2);outline:1px dashed var(--dsw-alias-brand-primary)}
+.st-native-workspaces{display:contents}.st-native-workspaces .st-workspace-drop{background:var(--dsw-alias-bg-layer-2);outline:1px dashed var(--dsw-alias-brand-primary);outline-offset:-1px;border-radius:6px}
+.st-native-workspaces>div,.st-native-workspaces [class*="_listArea"],.st-native-workspaces [class*="_treeBody"],.st-native-workspaces [role="tree"]{flex:none;min-height:auto;overflow:visible}.st-native-workspaces [role="tree"]{scrollbar-gutter:auto}.st-native-workspaces [class*="_fade"]{display:none}
 .st-group-head{height:34px}.st-fold{display:flex;align-items:center;gap:7px;flex:1;min-width:0;text-align:left;height:32px;padding:4px;font-size:13px;font-weight:500}.st-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}.st-count{font-size:11px;color:var(--dsw-alias-label-tertiary);font-weight:400}
 .st-row{position:relative;min-height:34px;border-radius:6px;padding-left:16px;font-size:13px}.st-row[aria-current=true]{background:var(--dsw-alias-bg-layer-2)}.st-open{display:flex;align-items:center;gap:7px;min-width:0;flex:1;text-align:left;padding:7px 2px}.st-row:hover{background:var(--dsw-alias-bg-layer-1)}.st-dot{width:6px;height:6px;border-radius:50%;flex:none;background:var(--dsw-alias-state-idle-primary)}.st-dot.running{background:var(--dsw-alias-brand-primary)}.st-dot.waiting{background:var(--dsw-alias-state-warn-primary)}.st-dot.done{background:var(--dsw-alias-state-success-primary)}
 .st-caption{font-size:11px;color:var(--dsw-alias-label-tertiary);padding:0 4px 5px 31px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.st-muted{font-size:12px;line-height:1.6;color:var(--dsw-alias-label-tertiary);padding:8px 12px}.st-error{color:var(--dsw-alias-state-error-primary);font-size:12px;padding:6px;overflow-wrap:anywhere}.st-search{box-sizing:border-box;width:100%;padding:6px 8px;font:inherit;font-size:12px;background:var(--dsw-alias-bg-base);border:1px solid var(--dsw-alias-border-l1);border-radius:6px;color:inherit;margin-bottom:4px}
@@ -92,6 +95,20 @@ window.__ModuleLoader__.load({
           const [, setOpen] = useMenuOpenState();
           return h('button', { type: 'button', role: 'menuitem', className: 'st-choice', onClick: e => { const anchor = anchorOf(e); setOpen(false); openMove?.(id, anchor); } }, '#  ' + t('move'));
         }
+        // Keep the dragged row mounted while the target highlight changes.
+        function SessionRow({ s, statuses, workspaces, pinned, panelActive, selected, title, renderSlot }) {
+          const [menu, setMenu] = React.useState(false);
+          const status = statuses.get(s.id);
+          const pending = status?.pendingInteraction;
+          const running = status?.running ?? s.running;
+          const workspace = workspaces.items.find(w => w.sessionIds.includes(s.id));
+          return h('div', null,
+            h('div', { className: 'st-row st-drag', 'data-row-key': 'session:' + s.id, 'aria-current': !panelActive && s.id === selected, draggable: !s.blank, onDragStart: e => { e.dataTransfer.setData(SESSION_DRAG_TYPE, s.id); e.dataTransfer.effectAllowed = 'move'; } },
+              h('button', { className: 'st-open', onClick: () => ctx.uiWorkspace.openSession(s.id), title: title(s) }, h('span', { className: 'st-dot ' + (pending ? 'waiting' : running ? 'running' : status?.completionUnread ? 'done' : ''), 'aria-label': pending?.kind || (running ? 'running' : '') }), h('span', { className: 'st-name' }, (pinned.has(s.id) ? '⌑ ' : '') + title(s))),
+              !s.blank && h('button', { className: 'st-icon', title: t('menu'), 'aria-label': t('menu'), 'aria-expanded': menu, onClick: () => setMenu(!menu) }, '⋯')),
+            h('div', { className: 'st-caption', title: workspace?.path || s.cwd }, workspace?.title || s.cwd),
+            menu && h('div', { className: 'st-menu', role: 'menu', onKeyDown: e => { if (e.key === 'Escape') setMenu(false); } }, renderSlot('sidebar.workspaces.session.menu.item', { sessionId: s.id, displayTitle: title(s) }, { hookContext: [menu, setMenu] })));
+        }
         ctx.slots.inject('sidebar.workspaces', () => {
           let installed;
           let installedOriginal;
@@ -118,6 +135,8 @@ window.__ModuleLoader__.load({
             const [failure, setFailure] = React.useState('');
             const [drop, setDrop] = React.useState(null);
             const [limits, setLimits] = React.useState({});
+            const draggedSession = React.useRef(null);
+            const workspaceDrop = React.useRef(null);
             const selected = Object.values(list.byId).find(s => (s.retainedBy.mainView || 0) > 0)?.id;
             React.useEffect(() => {
               const off = source.subscribe(() => force(v => v + 1));
@@ -165,18 +184,26 @@ window.__ModuleLoader__.load({
             const pinned = new Set(workspaces.pinnedSessionIds);
             const title = s => s.blank ? t('newSession') : s.title || t('untitled');
             const rows = list.ids.map(id => list.byId[id]).filter(s => s && s.origin !== 'subagent' && (!s.blank || s.id === selected) && !archived.has(s.id));
-            function SessionRow({ s }) {
-              const [menu, setMenu] = React.useState(false);
-              const status = statuses.get(s.id);
-              const pending = status?.pendingInteraction;
-              const running = status?.running ?? s.running;
-              const workspace = workspaces.items.find(w => w.sessionIds.includes(s.id));
-              return h('div', null,
-                h('div', { className: 'st-row st-drag', 'aria-current': !panelActive && s.id === selected, draggable: !s.blank, onDragStart: e => { e.dataTransfer.setData('application/x-dsh-session-tag', s.id); e.dataTransfer.effectAllowed = 'move'; } },
-                  h('button', { className: 'st-open', onClick: () => ctx.uiWorkspace.openSession(s.id), title: title(s) }, h('span', { className: 'st-dot ' + (pending ? 'waiting' : running ? 'running' : status?.completionUnread ? 'done' : ''), 'aria-label': pending?.kind || (running ? 'running' : '') }), h('span', { className: 'st-name' }, (pinned.has(s.id) ? '⌑ ' : '') + title(s))),
-                  !s.blank && h('button', { className: 'st-icon', title: t('menu'), 'aria-label': t('menu'), 'aria-expanded': menu, onClick: () => setMenu(!menu) }, '⋯')),
-                h('div', { className: 'st-caption', title: workspace?.path || s.cwd }, workspace?.title || s.cwd),
-                menu && h('div', { className: 'st-menu', role: 'menu', onKeyDown: e => { if (e.key === 'Escape') setMenu(false); } }, props.renderSlot('sidebar.workspaces.session.menu.item', { sessionId: s.id, displayTitle: title(s) }, { hookContext: [menu, setMenu] })));
+            function draggableSession(id) {
+              const session = list.byId[id];
+              return session && !session.blank && session.origin !== 'subagent' && !archived.has(id);
+            }
+            function workspaceDropTarget(target, id) {
+              if (!assignments[id] || !target.closest('.st-native-workspaces')) return null;
+              const row = target.closest('[data-row-key]');
+              const key = row?.getAttribute('data-row-key');
+              let targetId;
+              if (key?.startsWith('workspace:')) targetId = key.slice('workspace:'.length);
+              else if (key?.startsWith('session:')) targetId = workspaces.items.find(w => w.sessionIds.includes(key.slice('session:'.length)))?.workspaceId ?? '';
+              else return null;
+              const originalId = workspaces.items.find(w => w.sessionIds.includes(id))?.workspaceId ?? '';
+              return targetId === originalId ? row : null;
+            }
+            function highlightWorkspace(row) {
+              if (workspaceDrop.current === row) return;
+              workspaceDrop.current?.classList.remove('st-workspace-drop');
+              workspaceDrop.current = row;
+              row?.classList.add('st-workspace-drop');
             }
             let content;
             if (dialog?.kind === 'move') content = h(React.Fragment, null,
@@ -198,7 +225,37 @@ window.__ModuleLoader__.load({
               } catch (reason) { setFailure(reason.message); }
               finally { setBusy(false); }
             } }, h('label', { htmlFor: 'st-tag-name' }, t('name')), h('input', { id: 'st-tag-name', value: draft, maxLength: 80, required: true, onChange: e => setDraft(e.target.value), disabled: busy }), h('div', { className: 'st-buttons' }, h('button', { type: 'button', onClick: close, disabled: busy }, t('cancel')), h('button', { type: 'submit', className: 'st-primary', disabled: busy || !draft.trim() }, t('save'))));
-            return h('div', { className: 'st-root' }, h('style', null, css),
+            return h('div', {
+              className: 'st-root',
+              onDragStartCapture: e => {
+                draggedSession.current = null;
+                const key = e.target.closest('[data-row-key]')?.getAttribute('data-row-key');
+                if (!key?.startsWith('session:')) return;
+                const id = key.slice('session:'.length);
+                if (draggableSession(id)) {
+                  draggedSession.current = id;
+                  e.dataTransfer.setData(SESSION_DRAG_TYPE, id);
+                }
+              },
+              onDragOverCapture: e => {
+                const row = workspaceDropTarget(e.target, draggedSession.current);
+                highlightWorkspace(row);
+                if (!row) return;
+                e.preventDefault();
+                e.stopPropagation();
+                e.dataTransfer.dropEffect = 'move';
+                setDrop(null);
+              },
+              onDropCapture: e => {
+                highlightWorkspace(null);
+                const id = e.dataTransfer.getData(SESSION_DRAG_TYPE);
+                if (!draggableSession(id) || !workspaceDropTarget(e.target, id)) return;
+                e.preventDefault();
+                e.stopPropagation();
+                return act({ action: 'unassign', sessionIds: [id] });
+              },
+              onDragEndCapture: () => { draggedSession.current = null; highlightWorkspace(null); setDrop(null); },
+            }, h('style', null, css),
               props.wide && h('section', { className: 'st-tags', 'aria-label': t('tags') },
                 h('div', { className: 'st-heading' }, h('span', null, t('tags')), h('button', { className: 'st-icon', title: t('refresh'), 'aria-label': t('refresh'), onClick: refresh }, '↻'), h('button', { className: 'st-icon', title: t('create'), 'aria-label': t('create'), onClick: e => { setFailure(''); setDraft(''); setDialog({ kind: 'create', anchor: anchorOf(e) }); } }, '+')),
                 error && h('div', { className: 'st-error', role: 'alert' }, error),
@@ -208,13 +265,13 @@ window.__ModuleLoader__.load({
                   const all = rows.filter(s => assignments[s.id] === tag.id);
                   const matching = all.filter(s => (title(s) + ' ' + (s.cwd || '')).toLowerCase().includes(query.toLowerCase()));
                   const limit = limits[tag.id] || 5;
-                  return h('section', { key: tag.id, className: 'st-group' + (drop === tag.id ? ' st-drop' : ''), onDragOver: e => { if (e.dataTransfer.types.includes('application/x-dsh-session-tag')) { e.preventDefault(); setDrop(tag.id); } }, onDragLeave: e => { if (!e.currentTarget.contains(e.relatedTarget)) setDrop(null); }, onDrop: e => { e.preventDefault(); setDrop(null); const id = e.dataTransfer.getData('application/x-dsh-session-tag'); if (list.byId[id]) act({ action: 'assign', tagId: tag.id, sessionIds: [id] }); } },
+                  return h('section', { key: tag.id, className: 'st-group' + (drop === tag.id ? ' st-drop' : ''), onDragOver: e => { if (e.dataTransfer.types.includes(SESSION_DRAG_TYPE)) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setDrop(tag.id); } }, onDragLeave: e => { if (!e.currentTarget.contains(e.relatedTarget)) setDrop(null); }, onDrop: e => { setDrop(null); const id = e.dataTransfer.getData(SESSION_DRAG_TYPE); if (!draggableSession(id)) return; e.preventDefault(); e.stopPropagation(); act({ action: 'assign', tagId: tag.id, sessionIds: [id] }); } },
                     h('div', { className: 'st-group-head' }, h('button', { className: 'st-fold', 'aria-expanded': !folds[tag.id], onClick: () => toggle(tag.id) }, h('span', null, folds[tag.id] ? '›' : '⌄'), h('span', null, '#'), h('span', { className: 'st-name' }, tag.name), h('span', { className: 'st-count' }, all.length)), h('button', { className: 'st-icon', 'aria-label': tag.name + ' ⋯', onClick: e => { setFailure(''); setDialog({ kind: 'menu', tag, anchor: anchorOf(e) }); } }, '⋯')),
-                    !folds[tag.id] && (matching.length ? matching.slice(0, limit).map(s => h(SessionRow, { key: s.id, s })) : h('div', { className: 'st-muted' }, t('empty'))),
+                    !folds[tag.id] && (matching.length ? matching.slice(0, limit).map(s => h(SessionRow, { key: s.id, s, statuses, workspaces, pinned, panelActive, selected, title, renderSlot: props.renderSlot })) : h('div', { className: 'st-muted' }, t('empty'))),
                     !folds[tag.id] && matching.length > 5 && h('button', { className: 'st-choice', onClick: () => setLimits({ ...limits, [tag.id]: limit >= matching.length ? 5 : limit + 10 }) }, t(limit >= matching.length ? 'less' : 'more')));
                 })),
               failure && !dialog && h('div', { className: 'st-error', role: 'alert' }, failure),
-              h(Original, { ...props, useSessions: sessionHook, useWorkspaces: workspaceHook }),
+              h('div', { className: 'st-native-workspaces' }, h(Original, { ...props, useSessions: sessionHook, useWorkspaces: workspaceHook })),
               dialog && h(Popover, { title: t(dialog.kind === 'move' ? 'move' : dialog.kind === 'menu' ? 'tags' : dialog.kind === 'delete' ? 'remove' : dialog.kind === 'rename' ? 'rename' : 'create'), close, t, anchor: dialog.anchor }, content, failure && h('div', { className: 'st-error', role: 'alert' }, failure)));
           }
             // Keep the native registration: its child-slot render bindings belong

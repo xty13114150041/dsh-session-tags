@@ -3,10 +3,11 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
-function clientFixture(hasOriginal) {
+function clientFixture(hasOriginal, react = {}, fetch) {
   let plugin;
   vm.runInNewContext(readFileSync(new URL('./client.js', import.meta.url), 'utf8'), {
-    window: { __ModuleLoader__: { load: value => { plugin = value.factory(() => ({})); } } },
+    fetch,
+    window: { __ModuleLoader__: { load: value => { plugin = value.factory(() => react); } } },
   });
   const entries = [];
   const subscribers = new Set();
@@ -76,4 +77,104 @@ test('client waits for the native browser when only the slot has been declared',
   dispose();
   assert.deepEqual(entries, [original]);
   assert.equal(original.component, nativeComponent);
+});
+
+function dragFixture() {
+  const requests = [];
+  const react = {
+    createElement: (type, props, ...children) => ({ type, props, children }),
+    useState: initial => [typeof initial === 'function' ? initial() : initial, () => {}],
+    useSyncExternalStore: () => ({ tags: [{ id: 'tag', name: 'Tag' }], assignments: { main: 'tag' } }),
+    useMemo: fn => fn(),
+    useEffect: () => {},
+    useRef: initial => ({ current: initial }),
+  };
+  const fixture = clientFixture(true, react, async (_url, options) => {
+    requests.push(JSON.parse(options.body));
+    return { ok: true, json: async () => ({ tags: [], assignments: {} }) };
+  });
+  const byId = Object.fromEntries(['main', 'ordinary', 'blank', 'child', 'archived'].map(id => [id, {
+    id, retainedBy: {}, blank: id === 'blank', origin: id === 'child' ? 'subagent' : 'user',
+  }]));
+  const browser = fixture.original.component({
+    useSessions: selector => selector({ ids: Object.keys(byId), byId }),
+    useWorkspaces: selector => selector({ items: [
+      { workspaceId: 'origin', sessionIds: ['main', 'ordinary'] },
+      { workspaceId: 'other', sessionIds: ['blank', 'child', 'archived'] },
+    ], archivedSessionIds: ['archived'], pinnedSessionIds: [] }),
+    useSessionStatus: selector => selector(new Map()),
+    usePanelInfo: selector => selector({ activePanelId: null }),
+  });
+  return { ...fixture, browser, requests };
+}
+
+test('native session drags carry the tag payload alongside the native text payload', () => {
+  const { browser, dispose } = dragFixture();
+  const values = new Map([['text/plain', 'main']]);
+  browser.props.onDragStartCapture({
+    target: { closest: () => ({ getAttribute: () => 'session:main' }) },
+    dataTransfer: { setData: (type, value) => values.set(type, value) },
+  });
+  assert.equal(values.get('text/plain'), 'main');
+  assert.equal(values.get('application/x-dsh-session-tag'), 'main');
+  dispose();
+});
+
+test('workspace, blank, archived, subagent and unrelated drags are not taggable', () => {
+  const { browser, dispose } = dragFixture();
+  for (const key of ['workspace:main', 'session:blank', 'session:child', 'session:archived', 'session:missing', null]) {
+    const values = new Map();
+    browser.props.onDragStartCapture({
+      target: { closest: () => key === null ? null : { getAttribute: () => key } },
+      dataTransfer: { setData: (type, value) => values.set(type, value) },
+    });
+    assert.equal(values.size, 0, String(key));
+  }
+  dispose();
+});
+
+function workspaceDragEvent(key, native = true) {
+  const classes = new Set();
+  const row = {
+    getAttribute: () => key,
+    classList: { add: name => classes.add(name), remove: name => classes.delete(name) },
+  };
+  return {
+    classes,
+    target: { closest: selector => selector === '.st-native-workspaces' ? native ? {} : null : row },
+    dataTransfer: { getData: () => 'main' },
+    prevented: false, stopped: false,
+    preventDefault() { this.prevented = true; },
+    stopPropagation() { this.stopped = true; },
+  };
+}
+
+test('a tagged session can return through its original workspace header or a row in that workspace', async () => {
+  for (const key of ['workspace:origin', 'session:ordinary']) {
+    const { browser, requests, dispose } = dragFixture();
+    browser.props.onDragStartCapture({
+      target: { closest: () => ({ getAttribute: () => 'session:main' }) },
+      dataTransfer: { setData: () => {} },
+    });
+    const event = workspaceDragEvent(key);
+    browser.props.onDragOverCapture(event);
+    assert.equal(event.classes.has('st-workspace-drop'), true);
+    assert.equal(event.dataTransfer.dropEffect, 'move');
+    await browser.props.onDropCapture(event);
+    assert.deepEqual(requests, [{ action: 'unassign', sessionIds: ['main'] }]);
+    assert.equal(event.classes.size, 0);
+    assert.equal(event.prevented, true);
+    assert.equal(event.stopped, true);
+    dispose();
+  }
+});
+
+test('dropping over another workspace or a tag does not unassign the session', async () => {
+  const { browser, requests, dispose } = dragFixture();
+  for (const event of [workspaceDragEvent('workspace:other'), workspaceDragEvent('session:ordinary', false)]) {
+    await browser.props.onDropCapture(event);
+    assert.equal(event.prevented, false);
+  }
+  assert.deepEqual(requests, []);
+  dispose();
 });

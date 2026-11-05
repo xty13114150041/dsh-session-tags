@@ -7,8 +7,10 @@ Custom session tags for DeepSeek Harness Desktop. Bring conversations from diffe
 ## Features
 
 - **Tag sections**: Tags appear above workspaces. Each session can belong to one tag.
+- **Drag in both directions**: Drop workspace sessions onto a tag, move sessions between tags, or return them to their original workspace header or a session row inside it. Valid targets are highlighted.
 - **A compact session menu**: Open a session’s `⋯` menu and choose **Move to tag**. Assigned sessions appear under their tag.
 - **Collapsible groups**: Collapse tags independently and keep using Harness’s native workspace folding.
+- **One scroll area**: Tags and workspaces share a continuous sidebar scroll area.
 - **Anchored popovers**: Create, move, rename, and delete near the button or click position. Click outside or press `Escape` to dismiss.
 - **Native session actions**: Keep pinning, renaming, forking, and archiving through the session menu inside a tag.
 - **Local persistence**: Tags and assignments survive restarts. Expansion preferences are saved in the current desktop client.
@@ -21,7 +23,7 @@ Custom session tags for DeepSeek Harness Desktop. Bring conversations from diffe
 2. Install the following URL:
 
    ```text
-   https://github.com/xty13114150041/dsh-session-tags/archive/refs/tags/v1.0.0.tar.gz
+   https://github.com/xty13114150041/dsh-session-tags/archive/refs/tags/v1.1.0.tar.gz
    ```
 
 3. Fully quit and reopen DeepSeek Harness.
@@ -29,7 +31,7 @@ Custom session tags for DeepSeek Harness Desktop. Bring conversations from diffe
 ### From the command line
 
 ```bash
-dsh plugin --profile desktop add https://github.com/xty13114150041/dsh-session-tags/archive/refs/tags/v1.0.0.tar.gz
+dsh plugin --profile desktop add https://github.com/xty13114150041/dsh-session-tags/archive/refs/tags/v1.1.0.tar.gz
 ```
 
 Fully quit and reopen the desktop app after installation.
@@ -39,8 +41,9 @@ Fully quit and reopen the desktop app after installation.
 | Action | How |
 | --- | --- |
 | Create a tag | Click `+` beside **Tags**, enter a name, and save |
-| Assign a session | Open its `⋯` menu, choose **Move to tag**, and select a tag |
-| Return to a workspace | Choose **Move to tag → Return to workspace** from the same menu |
+| Assign a session | Drop it onto a tag header or section, or use its `⋯ → Move to tag` menu |
+| Move between tags | Drag a tagged session onto another tag; collapsed tags accept drops too |
+| Return to a workspace | Drop onto its original workspace header or a session row inside it, or choose `⋯ → Move to tag → Return to workspace` |
 | Collapse or expand | Click the arrow beside a tag name |
 | Rename a tag | Open the tag’s `⋯` menu and choose **Rename tag** |
 | Delete a tag | Choose **Delete tag** from its `⋯` menu; its sessions return to their original workspaces with their conversation history intact |
@@ -82,7 +85,7 @@ pnpm test
 pnpm run check
 ```
 
-The 17 tests cover state operations, client setup and cleanup, and the desktop data endpoint. Desktop checks cover startup, tag creation and editing, assignment and return, folding, native menus, and popovers.
+The 21 tests cover state operations, client setup and cleanup, and the desktop data endpoint. Desktop checks cover startup, tag creation and editing, dragging in both directions, moving between tags, folding, native menus, and popovers.
 
 | File | Purpose |
 | --- | --- |
