@@ -1,6 +1,6 @@
 {
   "name": "@local/dsh-session-tags",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
   "description": "Persistent custom session sections above collapsible workspaces",
   "license": "MIT",
@@ -10,7 +10,7 @@
   },
   "homepage": "https://github.com/xty13114150041/dsh-session-tags#readme",
   "bugs": { "url": "https://github.com/xty13114150041/dsh-session-tags/issues" },
-  "engines": { "dsh": "0.2.1-rc.5" },
+  "engines": { "dsh": "^0.2.1-rc.5" },
   "scripts": {
     "test": "node --test model.test.js client.test.js host.test.js",
     "check": "node --check client.js && node --check host.js && node --check model.js"

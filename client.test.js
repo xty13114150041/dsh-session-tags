@@ -79,6 +79,58 @@ test('client waits for the native browser when only the slot has been declared',
   assert.equal(original.component, nativeComponent);
 });
 
+function elements(node, out = []) {
+  if (Array.isArray(node)) {
+    for (const child of node) elements(child, out);
+    return out;
+  }
+  if (!node || typeof node !== 'object') return out;
+  if (node.type) out.push(node);
+  if (Array.isArray(node.children)) for (const child of node.children) elements(child, out);
+  return out;
+}
+
+function renderFixture() {
+  const react = {
+    createElement: (type, props, ...children) => ({ type, props, children }),
+    useState: initial => [typeof initial === 'function' ? initial() : initial, () => {}],
+    useSyncExternalStore: () => ({ tags: [{ id: 'tag', name: 'Tag' }], assignments: { main: 'tag' } }),
+    useMemo: fn => fn(),
+    useEffect: () => {},
+    useRef: initial => ({ current: initial }),
+  };
+  const fixture = clientFixture(true, react, async () => ({ ok: true, json: async () => ({ tags: [], assignments: {} }) }));
+  const byId = Object.fromEntries(['main', 'other'].map(id => [id, { id, retainedBy: {}, blank: false, origin: 'user' }]));
+  const calls = [];
+  const tree = fixture.original.component({
+    wide: true,
+    useSessions: selector => selector({ ids: Object.keys(byId), byId }),
+    useWorkspaces: selector => selector({ items: [{ workspaceId: 'origin', sessionIds: ['main', 'other'] }], archivedSessionIds: [], pinnedSessionIds: [] }),
+    useSessionStatus: selector => selector(new Map()),
+    usePanelInfo: selector => selector({ activePanelId: null }),
+    openSessionMenu: (...args) => calls.push(args),
+  });
+  return { ...fixture, tree, calls };
+}
+
+test('a tagged row opens the native session menu instead of re-rendering foreign menu slots', () => {
+  const { tree, calls, dispose } = renderFixture();
+  const row = elements(tree).find(node => node.type?.name === 'SessionRow');
+  assert.ok(row);
+  const rendered = row.type(row.props);
+  assert.equal(elements(rendered).some(node => node.props?.className === 'st-menu'), false);
+  const button = elements(rendered).find(node => node.props?.['aria-label'] === 'menu');
+  assert.ok(button);
+  button.props.onClick({ currentTarget: { getBoundingClientRect: () => ({ left: 12, bottom: 34 }) } });
+  assert.equal(calls.length, 1);
+  const [sessionId, displayTitle, point, mode] = calls[0];
+  assert.equal(sessionId, 'main');
+  assert.equal(displayTitle, 'untitled');
+  assert.deepEqual({ ...point }, { x: 12, y: 34 });
+  assert.equal(mode, 'toggle');
+  dispose();
+});
+
 function dragFixture() {
   const requests = [];
   const react = {
