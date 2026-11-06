@@ -121,11 +121,15 @@ test('a tagged row opens the native session menu instead of re-rendering foreign
   assert.equal(elements(rendered).some(node => node.props?.className === 'st-menu'), false);
   const button = elements(rendered).find(node => node.props?.['aria-label'] === 'menu');
   assert.ok(button);
+  assert.equal(button.props['data-context-menu-trigger'], '');
+  let stopped = false;
+  button.props.onPointerDown({ stopPropagation: () => { stopped = true; } });
+  assert.equal(stopped, true);
   button.props.onClick({ currentTarget: { getBoundingClientRect: () => ({ left: 12, bottom: 34 }) } });
   assert.equal(calls.length, 1);
   const [sessionId, displayTitle, point, mode] = calls[0];
   assert.equal(sessionId, 'main');
-  assert.equal(displayTitle, 'untitled');
+  assert.equal(displayTitle, '');
   assert.deepEqual({ ...point }, { x: 12, y: 34 });
   assert.equal(mode, 'toggle');
   dispose();

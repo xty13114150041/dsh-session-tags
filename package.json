@@ -1,6 +1,6 @@
 {
   "name": "@local/dsh-session-tags",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "private": true,
   "description": "Persistent custom session sections above collapsible workspaces",
   "license": "MIT",

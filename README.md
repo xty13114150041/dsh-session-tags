@@ -23,7 +23,7 @@
 2. 填入以下地址并安装：
 
    ```text
-   https://github.com/xty13114150041/dsh-session-tags/archive/refs/tags/v1.2.0.tar.gz
+   https://github.com/xty13114150041/dsh-session-tags/archive/refs/tags/v1.2.1.tar.gz
    ```
 
 3. 完全退出并重新打开 DeepSeek Harness。
@@ -31,7 +31,7 @@
 ### 使用命令行
 
 ```bash
-dsh plugin --profile desktop add https://github.com/xty13114150041/dsh-session-tags/archive/refs/tags/v1.2.0.tar.gz
+dsh plugin --profile desktop add https://github.com/xty13114150041/dsh-session-tags/archive/refs/tags/v1.2.1.tar.gz
 ```
 
 安装完成后，完全退出并重新打开桌面端。

@@ -106,7 +106,7 @@ window.__ModuleLoader__.load({
           return h('div', null,
             h('div', { className: 'st-row st-drag', 'data-row-key': 'session:' + s.id, 'aria-current': !panelActive && s.id === selected, draggable: !s.blank, onDragStart: e => { e.dataTransfer.setData(SESSION_DRAG_TYPE, s.id); e.dataTransfer.effectAllowed = 'move'; } },
               h('button', { className: 'st-open', onClick: () => ctx.uiWorkspace.openSession(s.id), title: title(s) }, h('span', { className: 'st-dot ' + (pending ? 'waiting' : running ? 'running' : status?.completionUnread ? 'done' : ''), 'aria-label': pending?.kind || (running ? 'running' : '') }), h('span', { className: 'st-name' }, (pinned.has(s.id) ? '⌑ ' : '') + title(s))),
-              !s.blank && h('button', { className: 'st-icon', title: t('menu'), 'aria-label': t('menu'), 'aria-haspopup': 'menu', onClick: e => { const anchor = anchorOf(e); if (openMenu) openMenu(s.id, title(s), anchor, 'toggle'); else openMove?.(s.id, anchor); } }, '⋯')),
+              !s.blank && h('button', { className: 'st-icon', title: t('menu'), 'aria-label': t('menu'), 'aria-haspopup': 'menu', 'data-context-menu-trigger': '', onPointerDown: e => e.stopPropagation(), onClick: e => { const anchor = anchorOf(e); if (openMenu) openMenu(s.id, s.title || '', anchor, 'toggle'); else openMove?.(s.id, anchor); } }, '⋯')),
             h('div', { className: 'st-caption', title: workspace?.path || s.cwd }, workspace?.title || s.cwd));
         }
         ctx.slots.inject('sidebar.workspaces', () => {

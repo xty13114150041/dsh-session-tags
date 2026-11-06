@@ -23,7 +23,7 @@ Custom session tags for DeepSeek Harness Desktop. Bring conversations from diffe
 2. Install the following URL:
 
    ```text
-   https://github.com/xty13114150041/dsh-session-tags/archive/refs/tags/v1.2.0.tar.gz
+   https://github.com/xty13114150041/dsh-session-tags/archive/refs/tags/v1.2.1.tar.gz
    ```
 
 3. Fully quit and reopen DeepSeek Harness.
@@ -31,7 +31,7 @@ Custom session tags for DeepSeek Harness Desktop. Bring conversations from diffe
 ### From the command line
 
 ```bash
-dsh plugin --profile desktop add https://github.com/xty13114150041/dsh-session-tags/archive/refs/tags/v1.2.0.tar.gz
+dsh plugin --profile desktop add https://github.com/xty13114150041/dsh-session-tags/archive/refs/tags/v1.2.1.tar.gz
 ```
 
 Fully quit and reopen the desktop app after installation.
