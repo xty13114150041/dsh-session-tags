@@ -10,7 +10,7 @@
 - **双向拖动**：将工作区会话拖到标签即可归类；标签之间可直接拖动，拖到原工作区标题或其中任一会话即可移回。目标区域会高亮提示。
 - **原生会话菜单**：标签内的会话点开 `⋯` 使用 Harness 原生会话菜单，置顶、重命名、分叉、归档等操作与「移至标签」并列；已归类的会话集中显示在标签下。
 - **折叠与展开**：标签支持独立折叠，工作区沿用 Harness 的原生折叠功能。
-- **连续滚动**：标签和工作区共用一个滚动区，左栏从上到下连续浏览。
+- **连续滚动**：标签接管 Harness 侧栏的分区滚动，标签与工作区在同一个滚动容器中连续浏览。
 - **跟随位置的小浮窗**：新建、移动、重命名和删除在按钮或点击位置附近展开，支持点击空白处或按 `Escape` 关闭。
 - **保留原生操作**：标签内的会话继续使用置顶、重命名、分叉、归档等原生菜单操作。
 - **本地保存**：标签和归类关系保存在本机，重启后继续使用；折叠状态保存在当前桌面客户端。
@@ -23,7 +23,7 @@
 2. 填入以下地址并安装：
 
    ```text
-   https://github.com/xty13114150041/dsh-session-tags/archive/refs/tags/v1.2.1.tar.gz
+   https://github.com/xty13114150041/dsh-session-tags/archive/refs/tags/v1.3.0.tar.gz
    ```
 
 3. 完全退出并重新打开 DeepSeek Harness。
@@ -31,7 +31,7 @@
 ### 使用命令行
 
 ```bash
-dsh plugin --profile desktop add https://github.com/xty13114150041/dsh-session-tags/archive/refs/tags/v1.2.1.tar.gz
+dsh plugin --profile desktop add https://github.com/xty13114150041/dsh-session-tags/archive/refs/tags/v1.3.0.tar.gz
 ```
 
 安装完成后，完全退出并重新打开桌面端。
@@ -54,11 +54,11 @@ dsh plugin --profile desktop add https://github.com/xty13114150041/dsh-session-t
 
 ## 兼容性
 
-- **支持版本**：DeepSeek Harness Desktop `0.2.2-rc.1`（`engines.dsh: ^0.2.1-rc.5`，覆盖 0.2.x 系列）。
+- **支持版本**：DeepSeek Harness Desktop `0.2.2-rc.3`（`engines.dsh: ^0.2.2-rc.3`，覆盖 0.2.2 及后续 0.2.x）。
 - **实测平台**：macOS。Windows 和 Linux 桌面端尚未验证。
-- **界面适配**：复用 Harness 的主题颜色和原生会话菜单，当前已验证浅色主题。
+- **界面适配**：复用 Harness 的主题令牌和原生会话菜单，随深浅色主题切换。
 
-插件依赖当前版本的侧栏组件接口。适配其他 Harness 版本时，需要重新验证侧栏和菜单。
+插件依赖当前版本的侧栏组件接口（分区滚动、会话菜单 Factory）。适配其他 Harness 版本时，需要重新验证侧栏滚动和菜单。
 
 ## 智能体工具
 
@@ -85,7 +85,7 @@ pnpm test
 pnpm run check
 ```
 
-测试覆盖标签状态操作、客户端挂载与卸载、原生会话菜单、桌面数据接口，共 22 项。桌面实测覆盖启动、标签增删改、双向拖动、标签间移动、折叠、原生菜单和小浮窗交互。
+测试覆盖标签状态操作、客户端挂载与卸载、分区滚动绑定、原生会话菜单触发、桌面数据接口，共 24 项。桌面实测覆盖启动、标签增删改、双向拖动、标签间移动、折叠、原生菜单和小浮窗交互。
 
 主要文件：
 

@@ -10,7 +10,8 @@ window.__ModuleLoader__.load({
       en: { tags: 'Tags', create: 'New tag', name: 'Tag name', save: 'Save', cancel: 'Cancel', rename: 'Rename tag', remove: 'Delete tag', removeConfirm: 'Sessions return to their original workspaces. No sessions will be deleted.', empty: 'Drop a session here, or use its ⋯ menu', untitled: 'Untitled', newSession: 'New session', move: 'Move to tag', original: 'Return to workspace', refresh: 'Refresh tags', loading: 'Loading tags…', retry: 'Retry', select: 'Choose tag', search: 'Filter tagged sessions', noSession: 'Open a session first', menu: 'Session actions', count: '{count} sessions', close: 'Close', workspaces: 'Workspaces', more: 'Show more', less: 'Show less' },
     };
     const css = `
-.st-root{display:flex;flex:1;flex-direction:column;min-height:0;overflow-x:hidden;overflow-y:auto;scrollbar-gutter:stable;color:var(--dsw-alias-label-primary)}
+.st-root{display:flex;flex:1;flex-direction:column;min-height:0;overflow-x:hidden;overflow-y:auto;scrollbar-gutter:stable;max-height:100cqh;color:var(--dsw-alias-label-primary)}
+.st-root.st-rail{overflow:visible;max-height:none;scrollbar-gutter:auto}
 .st-tags{flex:none;padding:2px 8px 8px 0;border-bottom:1px solid var(--dsw-alias-border-l1);margin-bottom:6px}
 .st-heading,.st-group-head,.st-row{display:flex;align-items:center;gap:6px;min-width:0}
 .st-heading{height:32px;color:var(--dsw-alias-label-tertiary);font-size:12px;padding-left:4px}.st-heading>span{flex:1}
@@ -20,7 +21,9 @@ window.__ModuleLoader__.load({
 .st-tags button:focus-visible,.st-dialog :focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:-2px}
 .st-group{border-radius:8px}.st-group.st-drop{background:var(--dsw-alias-bg-layer-2);outline:1px dashed var(--dsw-alias-brand-primary)}
 .st-native-workspaces{display:contents}.st-native-workspaces .st-workspace-drop{background:var(--dsw-alias-bg-layer-2);outline:1px dashed var(--dsw-alias-brand-primary);outline-offset:-1px;border-radius:6px}
-.st-native-workspaces>div,.st-native-workspaces [class*="_listArea"],.st-native-workspaces [class*="_treeBody"],.st-native-workspaces [role="tree"]{flex:none;min-height:auto;overflow:visible}.st-native-workspaces [role="tree"]{scrollbar-gutter:auto}.st-native-workspaces [class*="_fade"]{display:none}
+.st-root:not(.st-rail) .st-native-workspaces>div,.st-root:not(.st-rail) .st-native-workspaces [class*="_listArea"],.st-root:not(.st-rail) .st-native-workspaces [class*="_treeBody"],.st-root:not(.st-rail) .st-native-workspaces [role="tree"]{flex:none;min-height:auto;max-height:none!important;overflow:visible!important}.st-native-workspaces [role="tree"]{scrollbar-gutter:auto}.st-native-workspaces [class*="_fade"]{display:none}
+.st-menu{flex:none;display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;padding:0;border:0;border-radius:6px;background:transparent;color:inherit;cursor:pointer}
+.st-menu:hover{background:var(--dsw-alias-bg-layer-2)}.st-menu:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:-2px}
 .st-group-head{height:34px}.st-fold{display:flex;align-items:center;gap:7px;flex:1;min-width:0;text-align:left;height:32px;padding:4px;font-size:13px;font-weight:500}.st-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}.st-count{font-size:11px;color:var(--dsw-alias-label-tertiary);font-weight:400}
 .st-row{position:relative;min-height:34px;border-radius:6px;padding-left:16px;font-size:13px}.st-row[aria-current=true]{background:var(--dsw-alias-bg-layer-2)}.st-open{display:flex;align-items:center;gap:7px;min-width:0;flex:1;text-align:left;padding:7px 2px}.st-row:hover{background:var(--dsw-alias-bg-layer-1)}.st-dot{width:6px;height:6px;border-radius:50%;flex:none;background:var(--dsw-alias-state-idle-primary)}.st-dot.running{background:var(--dsw-alias-brand-primary)}.st-dot.waiting{background:var(--dsw-alias-state-warn-primary)}.st-dot.done{background:var(--dsw-alias-state-success-primary)}
 .st-caption{font-size:11px;color:var(--dsw-alias-label-tertiary);padding:0 4px 5px 31px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.st-muted{font-size:12px;line-height:1.6;color:var(--dsw-alias-label-tertiary);padding:8px 12px}.st-error{color:var(--dsw-alias-state-error-primary);font-size:12px;padding:6px;overflow-wrap:anywhere}.st-search{box-sizing:border-box;width:100%;padding:6px 8px;font:inherit;font-size:12px;background:var(--dsw-alias-bg-base);border:1px solid var(--dsw-alias-border-l1);border-radius:6px;color:inherit;margin-bottom:4px}
@@ -90,6 +93,11 @@ window.__ModuleLoader__.load({
         }
         const refresh = () => execute({ action: 'list' }).catch(reason => { error = reason.message; notify(); });
         const source = { subscribe: fn => { listeners.add(fn); return () => listeners.delete(fn); }, getSnapshot: () => state };
+        // The sidebar hands one section scroller to its occupant. The plugin's
+        // own tags + browser wrapper owns the only vertical scroller, so the
+        // native browser receives an inert hook and must not rebind the section.
+        const inertScroller = Object.freeze({ bindScrollerRef: () => {} });
+        const useInertSectionScroller = () => inertScroller;
         let openMove = null;
         function MoveMenu({ sessionId: id, useMenuOpenState }) {
           const [, setOpen] = useMenuOpenState();
@@ -98,15 +106,16 @@ window.__ModuleLoader__.load({
         // Keep the dragged row mounted while the target highlight changes.
         // The "…" button opens the native Session menu: it owns the built-in
         // actions and renders this plugin's registered "Move to tag" row.
-        function SessionRow({ s, statuses, workspaces, pinned, panelActive, selected, title, openMenu }) {
+        function SessionRow({ s, statuses, workspaces, pinned, panelActive, selected, title, renderFactorySlot }) {
           const status = statuses.get(s.id);
           const pending = status?.pendingInteraction;
           const running = status?.running ?? s.running;
           const workspace = workspaces.items.find(w => w.sessionIds.includes(s.id));
+          const menuTarget = { kind: 'session', value: { sessionId: s.id, displayTitle: s.title || '' } };
           return h('div', null,
             h('div', { className: 'st-row st-drag', 'data-row-key': 'session:' + s.id, 'aria-current': !panelActive && s.id === selected, draggable: !s.blank, onDragStart: e => { e.dataTransfer.setData(SESSION_DRAG_TYPE, s.id); e.dataTransfer.effectAllowed = 'move'; } },
               h('button', { className: 'st-open', onClick: () => ctx.uiWorkspace.openSession(s.id), title: title(s) }, h('span', { className: 'st-dot ' + (pending ? 'waiting' : running ? 'running' : status?.completionUnread ? 'done' : ''), 'aria-label': pending?.kind || (running ? 'running' : '') }), h('span', { className: 'st-name' }, (pinned.has(s.id) ? '⌑ ' : '') + title(s))),
-              !s.blank && h('button', { className: 'st-icon', title: t('menu'), 'aria-label': t('menu'), 'aria-haspopup': 'menu', 'data-context-menu-trigger': '', onPointerDown: e => e.stopPropagation(), onClick: e => { const anchor = anchorOf(e); if (openMenu) openMenu(s.id, s.title || '', anchor, 'toggle'); else openMove?.(s.id, anchor); } }, '⋯')),
+              !s.blank && renderFactorySlot?.('contextMenu.button', { target: menuTarget, label: t('menu'), className: 'st-menu' })),
             h('div', { className: 'st-caption', title: workspace?.path || s.cwd }, workspace?.title || s.cwd));
         }
         ctx.slots.inject('sidebar.workspaces', () => {
@@ -125,6 +134,8 @@ window.__ModuleLoader__.load({
             const workspaces = props.useWorkspaces(s => s);
             const statuses = props.useSessionStatus(s => s);
             const panelActive = props.usePanelInfo(s => s.activePanelId !== null);
+            const section = props.useSectionScroller?.();
+            const sectionRef = props.wide ? section?.bindScrollerRef : undefined;
             const data = React.useSyncExternalStore(source.subscribe, source.getSnapshot);
             const [, force] = React.useState(0);
             const [folds, setFolds] = React.useState(readFolds);
@@ -226,7 +237,8 @@ window.__ModuleLoader__.load({
               finally { setBusy(false); }
             } }, h('label', { htmlFor: 'st-tag-name' }, t('name')), h('input', { id: 'st-tag-name', value: draft, maxLength: 80, required: true, onChange: e => setDraft(e.target.value), disabled: busy }), h('div', { className: 'st-buttons' }, h('button', { type: 'button', onClick: close, disabled: busy }, t('cancel')), h('button', { type: 'submit', className: 'st-primary', disabled: busy || !draft.trim() }, t('save'))));
             return h('div', {
-              className: 'st-root',
+              className: 'st-root' + (props.wide ? '' : ' st-rail'),
+              ref: sectionRef,
               onDragStartCapture: e => {
                 draggedSession.current = null;
                 const key = e.target.closest('[data-row-key]')?.getAttribute('data-row-key');
@@ -267,11 +279,11 @@ window.__ModuleLoader__.load({
                   const limit = limits[tag.id] || 5;
                   return h('section', { key: tag.id, className: 'st-group' + (drop === tag.id ? ' st-drop' : ''), onDragOver: e => { if (e.dataTransfer.types.includes(SESSION_DRAG_TYPE)) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setDrop(tag.id); } }, onDragLeave: e => { if (!e.currentTarget.contains(e.relatedTarget)) setDrop(null); }, onDrop: e => { setDrop(null); const id = e.dataTransfer.getData(SESSION_DRAG_TYPE); if (!draggableSession(id)) return; e.preventDefault(); e.stopPropagation(); act({ action: 'assign', tagId: tag.id, sessionIds: [id] }); } },
                     h('div', { className: 'st-group-head' }, h('button', { className: 'st-fold', 'aria-expanded': !folds[tag.id], onClick: () => toggle(tag.id) }, h('span', null, folds[tag.id] ? '›' : '⌄'), h('span', null, '#'), h('span', { className: 'st-name' }, tag.name), h('span', { className: 'st-count' }, all.length)), h('button', { className: 'st-icon', 'aria-label': tag.name + ' ⋯', onClick: e => { setFailure(''); setDialog({ kind: 'menu', tag, anchor: anchorOf(e) }); } }, '⋯')),
-                    !folds[tag.id] && (matching.length ? matching.slice(0, limit).map(s => h(SessionRow, { key: s.id, s, statuses, workspaces, pinned, panelActive, selected, title, openMenu: props.openSessionMenu })) : h('div', { className: 'st-muted' }, t('empty'))),
+                    !folds[tag.id] && (matching.length ? matching.slice(0, limit).map(s => h(SessionRow, { key: s.id, s, statuses, workspaces, pinned, panelActive, selected, title, renderFactorySlot: props.renderFactorySlot })) : h('div', { className: 'st-muted' }, t('empty'))),
                     !folds[tag.id] && matching.length > 5 && h('button', { className: 'st-choice', onClick: () => setLimits({ ...limits, [tag.id]: limit >= matching.length ? 5 : limit + 10 }) }, t(limit >= matching.length ? 'less' : 'more')));
                 })),
               failure && !dialog && h('div', { className: 'st-error', role: 'alert' }, failure),
-              h('div', { className: 'st-native-workspaces' }, h(Original, { ...props, useSessions: sessionHook, useWorkspaces: workspaceHook })),
+              h('div', { className: 'st-native-workspaces' }, h(Original, { ...(props.wide ? { ...props, useSectionScroller: useInertSectionScroller } : props), useSessions: sessionHook, useWorkspaces: workspaceHook })),
               dialog && h(Popover, { title: t(dialog.kind === 'move' ? 'move' : dialog.kind === 'menu' ? 'tags' : dialog.kind === 'delete' ? 'remove' : dialog.kind === 'rename' ? 'rename' : 'create'), close, t, anchor: dialog.anchor }, content, failure && h('div', { className: 'st-error', role: 'alert' }, failure)));
           }
             // Keep the native registration: its child-slot render bindings belong

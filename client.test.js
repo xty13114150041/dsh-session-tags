@@ -90,7 +90,7 @@ function elements(node, out = []) {
   return out;
 }
 
-function renderFixture() {
+function renderFixture(overrides = {}) {
   const react = {
     createElement: (type, props, ...children) => ({ type, props, children }),
     useState: initial => [typeof initial === 'function' ? initial() : initial, () => {}],
@@ -101,37 +101,57 @@ function renderFixture() {
   };
   const fixture = clientFixture(true, react, async () => ({ ok: true, json: async () => ({ tags: [], assignments: {} }) }));
   const byId = Object.fromEntries(['main', 'other'].map(id => [id, { id, retainedBy: {}, blank: false, origin: 'user' }]));
-  const calls = [];
+  const bindScrollerRef = overrides.bindScrollerRef || (() => {});
   const tree = fixture.original.component({
     wide: true,
     useSessions: selector => selector({ ids: Object.keys(byId), byId }),
     useWorkspaces: selector => selector({ items: [{ workspaceId: 'origin', sessionIds: ['main', 'other'] }], archivedSessionIds: [], pinnedSessionIds: [] }),
     useSessionStatus: selector => selector(new Map()),
     usePanelInfo: selector => selector({ activePanelId: null }),
-    openSessionMenu: (...args) => calls.push(args),
+    useSectionScroller: () => ({ bindScrollerRef }),
+    renderFactorySlot: (name, props) => ({ type: 'menu-trigger', props: { name, ...props } }),
+    ...overrides.props,
   });
-  return { ...fixture, tree, calls };
+  return { ...fixture, tree, bindScrollerRef };
 }
 
-test('a tagged row opens the native session menu instead of re-rendering foreign menu slots', () => {
-  const { tree, calls, dispose } = renderFixture();
+test('a tagged row renders the native session-menu trigger', () => {
+  const { tree, dispose } = renderFixture();
   const row = elements(tree).find(node => node.type?.name === 'SessionRow');
   assert.ok(row);
   const rendered = row.type(row.props);
-  assert.equal(elements(rendered).some(node => node.props?.className === 'st-menu'), false);
-  const button = elements(rendered).find(node => node.props?.['aria-label'] === 'menu');
-  assert.ok(button);
-  assert.equal(button.props['data-context-menu-trigger'], '');
-  let stopped = false;
-  button.props.onPointerDown({ stopPropagation: () => { stopped = true; } });
-  assert.equal(stopped, true);
-  button.props.onClick({ currentTarget: { getBoundingClientRect: () => ({ left: 12, bottom: 34 }) } });
-  assert.equal(calls.length, 1);
-  const [sessionId, displayTitle, point, mode] = calls[0];
-  assert.equal(sessionId, 'main');
-  assert.equal(displayTitle, '');
-  assert.deepEqual({ ...point }, { x: 12, y: 34 });
-  assert.equal(mode, 'toggle');
+  const trigger = elements(rendered).find(node => node.type === 'menu-trigger');
+  assert.ok(trigger);
+  assert.equal(trigger.props.name, 'contextMenu.button');
+  assert.equal(trigger.props.target.kind, 'session');
+  assert.equal(trigger.props.target.value.sessionId, 'main');
+  assert.equal(trigger.props.target.value.displayTitle, '');
+  assert.equal(trigger.props.label, 'menu');
+  assert.equal(trigger.props.className, 'st-menu');
+  dispose();
+});
+
+test('the tags wrapper owns the sidebar section scroller in the wide sidebar', () => {
+  let nativeBindings = 0;
+  const bindScrollerRef = () => { nativeBindings += 1; };
+  const { tree, nativeComponent, dispose } = renderFixture({ bindScrollerRef });
+  assert.equal(tree.props.ref, bindScrollerRef);
+  const native = elements(tree).find(node => node.type === nativeComponent);
+  assert.ok(native);
+  native.props.useSectionScroller().bindScrollerRef();
+  assert.equal(nativeBindings, 0);
+  dispose();
+});
+
+test('the rail keeps the native browser as the section scroller', () => {
+  let nativeBindings = 0;
+  const bindScrollerRef = () => { nativeBindings += 1; };
+  const { tree, nativeComponent, dispose } = renderFixture({ bindScrollerRef, props: { wide: false } });
+  assert.equal(tree.props.ref, undefined);
+  const native = elements(tree).find(node => node.type === nativeComponent);
+  assert.ok(native);
+  native.props.useSectionScroller().bindScrollerRef();
+  assert.equal(nativeBindings, 1);
   dispose();
 });
 

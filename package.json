@@ -1,6 +1,6 @@
 {
   "name": "@local/dsh-session-tags",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "private": true,
   "description": "Persistent custom session sections above collapsible workspaces",
   "license": "MIT",
@@ -9,8 +9,12 @@
     "url": "https://github.com/xty13114150041/dsh-session-tags.git"
   },
   "homepage": "https://github.com/xty13114150041/dsh-session-tags#readme",
-  "bugs": { "url": "https://github.com/xty13114150041/dsh-session-tags/issues" },
-  "engines": { "dsh": "^0.2.1-rc.5" },
+  "bugs": {
+    "url": "https://github.com/xty13114150041/dsh-session-tags/issues"
+  },
+  "engines": {
+    "dsh": "^0.2.2-rc.3"
+  },
   "scripts": {
     "test": "node --test model.test.js client.test.js host.test.js",
     "check": "node --check client.js && node --check host.js && node --check model.js"
@@ -22,13 +26,29 @@
     "./locale/*.json": "./locale/*.json",
     "./icon": "./icon.svg"
   },
-  "files": ["host.js", "model.js", "client.js", "cordis.patch.yml", "locale/*.json", "icon.svg", "README.md", "README.en.md", "LICENSE"],
-  "dependencies": { "zod": "^4.0.0" },
+  "files": [
+    "host.js",
+    "model.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "README.md",
+    "README.en.md",
+    "LICENSE"
+  ],
+  "dependencies": {
+    "zod": "^4.0.0"
+  },
   "dsh": {
-    "bundle": { "patch": "./cordis.patch.yml" },
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
     "client": {
       "platform": "web",
-      "inject": ["@deepseek-ai/dsh-client-ui-workspace"]
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-workspace"
+      ]
     }
   }
 }
